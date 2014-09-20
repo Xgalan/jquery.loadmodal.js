@@ -44,17 +44,18 @@
 
 */
 (function($) {
+'use strict';
 
-	$.fn.loadmodal = function(options) {
+  $.fn.loadmodal = function(options) {
 
     // get the first item from the array as the element we'll work on
     var elem = this.first();
-    if (elem.length == 0) {
+    if (elem.length === 0) {
       return;
     }//if
 
     // allow a simple url to be sent as the single option
-    if ($.type(options) == 'string') {
+    if ($.type(options) === 'string') {
       options = { 
         url: options,
       };//options
@@ -86,7 +87,7 @@
     $('#' + options.id).modal('hide');
     
     // create our own success responder for the ajax
-    var orig_success = options.ajax.success;
+    var origSuccess = options.ajax.success;
     options.ajax.success = function(data, status, xhr) {
       // create the modal html
       var div = $([
@@ -112,15 +113,15 @@
 
       // event to remove the content on close
       div.on('hidden.bs.modal', function (e) {
-        div.remove();
+        this.remove();
       });
 
       // run the user success function, if there is one
-      if (orig_success) {
-        orig_success(data, status, xhr);
+      if (origSuccess) {
+        origSuccess(data, status, xhr);
       }//if
       
-    }//success
+    };//success
     
     // load the content from the server
     $.ajax(options.ajax);
