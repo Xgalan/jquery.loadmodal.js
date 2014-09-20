@@ -98,13 +98,12 @@
         '          <button class="close" data-dismiss="modal" type="button">x</button>',
         '          <h4 class="modal-title">' + options.title + '</h4>',
         '        </div>',
-        '        <div class="modal-body">',
+        '        <div class="modal-body">' + data,
         '        </div>',
         '      </div>',
         '    </div>',
         '  </div>',
       ].join('\n'));
-      div.find('.modal-body').html(data);
       
       // add the new modal div to the element and show it!
       elem.after(div);
