@@ -46,10 +46,8 @@ $('#someid').modal('hide');
 		tmpl = tmpl || '';
 
 		return (new Function("_", "e", "return '" +
-				tmpl.replace(/[\\\n\r']/g, function (char) {
-					return template_escape[char];
-				}).replace(/{\s*([\w\.]+)\s*}/g, "' + (e?e(_.$1,'$1'):_.$1||(_.$1==null?'':_.$1)) + '") + "'"))(data);
-	};
+				tmpl.replace(/{\s*([\w\.]+)\s*}/g, "' + (e?e(_.$1,'$1'):_.$1||(_.$1==null?'':_.$1)) + '") + "'"))(data);
+	}
 
 	$.fn.loadmodal = function (options) {
 
@@ -85,16 +83,17 @@ $('#someid').modal('hide');
 		// create our own success responder for the ajax
 		var origSuccess = options.ajax.success;
 		options.ajax.success = function (data, status, xhr) {
-			// create the modal html
-			var data = {
+			var objToRender = {
 				content : data,
 				id : options.id,
 				width : options.width,
 				title : options.title
 			};
-			var modalWindow = jQuery(render(tmpl, data));
 
-			// add the new modal div to the element and show it!
+            // create the modal html
+			var modalWindow = jQuery(render(tmpl, objToRender));
+
+			// add the new modal window to the chosen element and show it!
 			jQuery(options.appendToSelector).append(modalWindow);
 			modalWindow.modal();
 
