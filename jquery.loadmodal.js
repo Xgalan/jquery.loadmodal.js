@@ -1,123 +1,117 @@
 /*
-    Author: Conan C. Albrecht <ca@byu.edu>
-    License: MIT
-    Version: 1.1.3 (Feb 2014)
+Original author: Conan C. Albrecht <ca@byu.edu>
+License: MIT
+Forked from version: 1.1.3 (Feb 2014)
 
-    Reminder on how to publish to GitHub:
-        Change the version number in all the files.
-        git commit -am 'message'
-        git push origin master
-        git tag 1.1.10
-        git push origin --tags
+Dependencies:
+- JQuery 1.5+
+- Bootstrap (tested against v3)
 
-    Dependencies: 
-      - JQuery 1.5+
-      - Bootstrap (tested against v3)
+A JQuery plugin to open a Bootstrap modal (dialog) with content loaded via Ajax.
 
-    A JQuery plugin to open a Bootstrap modal (dialog) with content loaded via Ajax.
+Simple example:
 
-    Simple example: 
+$('#someid').loadmodal('/your/server/url/');
 
-        $('#someid').loadmodal('/your/server/url/');
+Advanced example:
 
-    Advanced example:
+$('#someid').loadmodal(
+url: '/your/server/url',
+id: 'custom_modal_id',
+title: 'My Title',
+width: '400px',
+ajax: {
+dataType: 'html',
+method: 'POST',
+success: function(data, status, xhr) {
+console.log($('#custom_modal_id'));
+},//
+// any other options from the regular $.ajax call (see JQuery docs)
+},
+});
 
-        $('#someid').loadmodal(
-          url: '/your/server/url',
-          id: 'custom_modal_id',
-          title: 'My Title',
-          width: '400px',
-          ajax: {
-            dataType: 'html',
-            method: 'POST',
-            success: function(data, status, xhr) {
-              console.log($('#custom_modal_id'));
-            },//
-            // any other options from the regular $.ajax call (see JQuery docs)
-          },
-        });
+Closing a dialog: (this is standard bootstrap)
 
-    Closing a dialog: (this is standard bootstrap)
-        
-        $('#someid').modal('hide'); 
+$('#someid').modal('hide');
 
 
-*/
-(function($) {
-'use strict';
+ */
+(function ($) {
+	'use strict';
 
-  $.fn.loadmodal = function(options) {
+	// provide your template
+	var tmpl = '<div id="{id}" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h4 class="modal-title">{title}</h4></div><div class="modal-body">{content}</div></div></div></div>';
 
-    // get the first item from the array as the element we'll work on
-    var elem = this.first();
-    if (elem.length === 0) {
-      return;
-    }//if
+	function render(tmpl, data) {
+		tmpl = tmpl || '';
 
-    // allow a simple url to be sent as the single option
-    if ($.type(options) === 'string') {
-      options = { 
-        url: options,
-      };//options
-    }//if
-    
-    // set the default options
-    options = $.extend({
-      url: null,                               // a convenience place to specify the url - this is moved into ajax.url
-      id: 'jquery-loadmodal-js',               // the id of the modal
-      title: window.document.title || 'Dialog',// the title of the dialog
-      width: '400px',                          // 20%, 400px, or other css width
-      ajax: {                                  // options sent into $.ajax (see JQuery docs for .ajax for the options)
-        url: null,                             // required (for convenience, you can specify url above instead)
-      },//ajax
-      
-    }, options);  
+		return (new Function("_", "e", "return '" +
+				tmpl.replace(/[\\\n\r']/g, function (char) {
+					return template_escape[char];
+				}).replace(/{\s*([\w\.]+)\s*}/g, "' + (e?e(_.$1,'$1'):_.$1||(_.$1==null?'':_.$1)) + '") + "'"))(data);
+	};
 
-    // ensure we have a url
-    options.ajax.url = options.ajax.url || options.url;
-    if (!options.ajax.url) {
-      throw new Error('$().loadmodal requires a url.');
-    }//if
+	$.fn.loadmodal = function (options) {
 
-    // close any dialog with this id first
-    $('#' + options.id).modal('hide');
+		// allow a simple url to be sent as the single option
+		if ($.type(options) === 'string') {
+			options = {
+				url : options,
+			}; //options
+		} //if
 
-    // create our own success responder for the ajax
-    var origSuccess = options.ajax.success;
-    options.ajax.success = function(data, status, xhr) {
-      // create the modal html
-      var modalWindow = jQuery(document.createElement('div')).addClass('modal fade').prop('id', options.id)
-        , modalDialog = jQuery(document.createElement('div')).addClass('modal-dialog modal-lg').css('width', options.width).appendTo(modalWindow)
-        , modalContent = jQuery(document.createElement('div')).addClass('modal-content').appendTo(modalDialog)
-        , modalHeader = jQuery(document.createElement('div')).addClass('modal-header')
-        , modalBody = jQuery(document.createElement('div')).addClass('modal-body').html($.parseHTML(data))
-        , title = jQuery(document.createElement('h4')).addClass('modal-title').text(options.title)
-        , spanClose = jQuery(document.createElement('span')).addClass('sr-only').text('Close')
-        , spanText = jQuery(document.createElement('span')).html('&times;').prop('aria-hidden', true)
-        , closeButton = document.createElement('button');
-      closeButton.setAttribute('data-dismiss', 'modal');
-      jQuery(closeButton).prop({type: 'button'}).addClass('close').append(spanText).append(spanClose);
-      modalContent.append(modalHeader.append(closeButton).append(title)).append(modalBody);
+		// set the default options
+		options = $.extend({
+				url : null, // a convenience place to specify the url - this is moved into ajax.url
+				id : 'jquery-loadmodal-js', // the id of the modal
+				appendToSelector : 'body', // the element to append the dialog <div> code to.  Normally, this should be left as the 'body' element.
+				title : window.document.title || 'Dialog', // the title of the dialog
+				width : '400px', // 20%, 400px, or other css width
+				ajax : { // options sent into $.ajax (see JQuery docs for .ajax for the options)
+					url : null, // required (for convenience, you can specify url above instead)
+				}, //ajax
 
-      // add the new modal div to the element and show it!
-      elem.after(modalWindow);
-      modalWindow.modal();
+			}, options);
 
-      // event to remove the content on close
-      modalWindow.on('hidden.bs.modal', this.remove);
+		// ensure we have a url
+		options.ajax.url = options.ajax.url || options.url;
+		if (!options.ajax.url) {
+			throw new Error('$().loadmodal requires a url.');
+		} //if
 
-      // run the user success function, if there is one
-      if (origSuccess) {
-        origSuccess(data, status, xhr);
-      }//if
+		// close any dialog with this id first
+		$('#' + options.id).modal('hide');
 
-    };//success
+		// create our own success responder for the ajax
+		var origSuccess = options.ajax.success;
+		options.ajax.success = function (data, status, xhr) {
+			// create the modal html
+			var data = {
+				content : data,
+				id : options.id,
+				width : options.width,
+				title : options.title
+			};
+			var modalWindow = jQuery(render(tmpl, data));
 
-    // load the content from the server
-    $.ajax(options.ajax);
+			// add the new modal div to the element and show it!
+			jQuery(options.appendToSelector).append(modalWindow);
+			modalWindow.modal();
 
-    // return this to allow chaining
-    return this;
-  };//setTimer function
-  
+			// event to remove the content on close
+			modalWindow.on('hidden.bs.modal', this.remove);
+
+			// run the user success function, if there is one
+			if (origSuccess) {
+				origSuccess(data, status, xhr);
+			} //if
+
+		}; //success
+
+		// load the content from the server
+		$.ajax(options.ajax);
+
+		return this;
+	};
+
 })(jQuery);
