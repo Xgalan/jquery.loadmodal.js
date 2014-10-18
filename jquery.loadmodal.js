@@ -9,45 +9,25 @@ Dependencies:
 
 A JQuery plugin to open a Bootstrap modal (dialog) with content loaded via Ajax.
 
-Simple example:
-
-$('#someid').loadmodal('/your/server/url/');
-
-Advanced example:
-
-$('#someid').loadmodal(
-url: '/your/server/url',
-id: 'custom_modal_id',
-title: 'My Title',
-width: '400px',
-ajax: {
-dataType: 'html',
-method: 'POST',
-success: function(data, status, xhr) {
-console.log($('#custom_modal_id'));
-},//
-// any other options from the regular $.ajax call (see JQuery docs)
-},
-});
-
-Closing a dialog: (this is standard bootstrap)
-
-$('#someid').modal('hide');
-
+See the README for an example.
 
  */
 (function ($) {
 	'use strict';
 
-	// provide your template
-	var tmpl = '<div id="{id}" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h4 class="modal-title">{title}</h4></div><div class="modal-body">{content}</div></div></div></div>';
-
-	function render(tmpl, data) {
-		tmpl = tmpl || '';
-
-		return (new Function("_", "e", "return '" +
-				tmpl.replace(/{\s*([\w\.]+)\s*}/g, "' + (e?e(_.$1,'$1'):_.$1||(_.$1==null?'':_.$1)) + '") + "'"))(data);
-	}
+	// provide your template for the modal window
+	var modalWindowTmpl = function (data) {
+		var __t,
+		__p = '';
+		__p += '<div class="modal fade" id="' +
+		((__t = (data.id)) === null ? '' : __t) +
+		'" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button><h4 class="modal-title" id="myModalLabel">' +
+		((__t = (data.title)) === null ? '' : __t) +
+		'</h4></div><div class="modal-body">' +
+		((__t = (data.content)) === null ? '' : __t) +
+		'</div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>';
+		return __p;
+	};
 
 	$.fn.loadmodal = function (options) {
 
@@ -90,15 +70,15 @@ $('#someid').modal('hide');
 				title : options.title
 			};
 
-            // create the modal html
-			var modalWindow = jQuery(render(tmpl, objToRender));
+			// create the modal html
+			var modalWindow = $(modalWindowTmpl(objToRender));
 
 			// add the new modal window to the chosen element and show it!
-			jQuery(options.appendToSelector).append(modalWindow);
+			$(options.appendToSelector).append(modalWindow);
 			modalWindow.modal();
 
 			// event to remove the content on close
-			modalWindow.on('hidden.bs.modal', this.remove);
+			modalWindow.one('hidden.bs.modal', this.remove);
 
 			// run the user success function, if there is one
 			if (origSuccess) {
